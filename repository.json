@@ -1,0 +1,12 @@
+﻿{
+  "sharpRepository": {
+    "repositories": {
+      "default": "ef",
+      "ef": {
+        "factory": "SharpRepository.EfCoreRepository.EfCoreConfigRepositoryFactory, SharpRepository.EfCoreRepository",
+        "connectionString": "server=localhost;user id=sa;password=secret;database=employee", 
+        "dbContextType": "CoreConsoleDemo.MyDbContext, CoreConsoleDemo" 
+      }
+    }
+  }
+}
