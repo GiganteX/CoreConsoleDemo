@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SharpRepository.Ioc.Microsoft.DependencyInjection;
 using SharpRepository.Repository;
 using SharpRepository.Repository.Configuration;
 using System;
@@ -19,13 +20,24 @@ namespace CoreConsoleDemo
 			var section = config.GetSection("sharpRepository");
 			ISharpRepositoryConfiguration sharpConfig = RepositoryFactory.BuildSharpRepositoryConfiguation(section);
 
-			// how to setup MyDbContext with the UseSqlServer() line?
+			// setting up services
+			var services = new ServiceCollection();
+			services.UseSharpRepository(section);
+			services.AddDbContext<MyDbContext>(options => options.UseSqlServer("server=localhost;user id=sa;password=secret;database=employee"), ServiceLifetime.Transient);
+			var serviceProvider = services.BuildServiceProvider();
 
-			var repo = new EmployeeRepository(sharpConfig);
+			// this is how I want it to work, using a ISharpRepositoryConfiguration object
+			var repo1 = new EmployeeRepository(sharpConfig); 
+			repo1.Add(new Employee { Name = "Sven Svensson" });
 
-			var emp = new Employee { Name = "Sven Svensson" };
+			// this would be second best, but won't work either...
+			var repo2 = serviceProvider.GetService<EmployeeRepository>();
+			repo2.Add(new Employee { Name = "Sven Svensson" });
 
-			repo.Add(emp);
+			// nor will this...
+			var repo3 = serviceProvider.GetService<IRepository<Employee, int>>();
+			repo3.Add(new Employee { Name = "Sven Svensson" });
+
 		}
 	}
 }
