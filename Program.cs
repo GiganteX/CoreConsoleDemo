@@ -22,20 +22,28 @@ namespace CoreConsoleDemo
 
 			// setting up services
 			var services = new ServiceCollection();
-			services.UseSharpRepository(section);
-			services.AddDbContext<MyDbContext>(options => options.UseSqlServer("server=localhost;user id=sa;password=secret;database=employee"), ServiceLifetime.Transient);
-			var serviceProvider = services.BuildServiceProvider();
 
-			// this is how I want it to work, using a ISharpRepositoryConfiguration object
-			var repo1 = new EmployeeRepository(sharpConfig); 
-			repo1.Add(new Employee { Name = "Sven Svensson" });
+            // add dbcontext to container before configuration to sharprepository
+            services.AddDbContext<MyDbContext>(options => options.UseSqlServer("server=localhost;user id=sa;password=secret;database=employee"), ServiceLifetime.Transient);
+                       
+            services.UseSharpRepository(section);
 
-			// this would be second best, but won't work either...
-			var repo2 = serviceProvider.GetService<EmployeeRepository>();
-			repo2.Add(new Employee { Name = "Sven Svensson" });
+            // add this lines for repo2
+            services.AddSingleton(sharpConfig);
+            services.AddTransient<EmployeeRepository>();
 
-			// nor will this...
-			var repo3 = serviceProvider.GetService<IRepository<Employee, int>>();
+            var serviceProvider = services.BuildServiceProvider();
+
+            // this need dbcontext from sharprepository DI
+            var repo1 = new EmployeeRepository(sharpConfig);
+            repo1.Add(new Employee { Name = "Sven Svensson" });
+
+            // this needs EmployeeRepository and ISharpRepositoryConfiguration configured
+            var repo2 = serviceProvider.GetService<EmployeeRepository>();
+            repo2.Add(new Employee { Name = "Sven Svensson" });
+
+            // this is not working yet, there some different how service provider is configured here ASP.NET Core
+            var repo3 = serviceProvider.GetService<IRepository<Employee, int>>();
 			repo3.Add(new Employee { Name = "Sven Svensson" });
 
 		}
